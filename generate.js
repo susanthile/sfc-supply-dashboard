@@ -149,9 +149,9 @@ async function fetchAllSupply() {
   console.log('Fetching Lightfield opportunities...');
   while (true) {
     const page = await get(`/v1/opportunities?limit=${LIMIT}&offset=${offset}`);
-    const records = page.data?.data ?? [];
+    const records = page.data ?? [];
     all.push(...records);
-    console.log(`  Fetched ${all.length} / ${page.data?.totalCount ?? '?'}`);
+    console.log(`  Fetched ${all.length} / ${page.totalCount ?? '?'}`);
     if (records.length < LIMIT) break;
     offset += LIMIT;
   }
