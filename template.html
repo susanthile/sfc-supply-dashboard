@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFC Supply Dashboard — Jun 19, 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0c10;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #0d1117;
+    border-bottom: 1px solid #1e2730;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo-area h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f0f6ff;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-area p {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .last-updated {
+    font-size: 12px;
+    color: #475569;
+  }
+
+  .btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: #1d4ed8; }
+
+  .btn-secondary {
+    background: #1e2730;
+    color: #94a3b8;
+    border: 1px solid #2d3748;
+  }
+
+  .btn-secondary:hover { background: #252f3d; color: #e2e8f0; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    padding: 20px 32px;
+    border-bottom: 1px solid #1e2730;
+    background: #0d1117;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: #131922;
+    border: 1px solid #1e2730;
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #f0f6ff;
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: #475569;
+    margin-top: 4px;
+  }
+
+  .stat-card.green .stat-value { color: #34d399; }
+  .stat-card.yellow .stat-value { color: #fbbf24; }
+  .stat-card.blue .stat-value { color: #60a5fa; }
+  .stat-card.red .stat-value { color: #f87171; }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    gap: 10px;
+    padding: 16px 32px;
+    background: #0d1117;
+    border-bottom: 1px solid #1e2730;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-box {
+    position: relative;
+    flex: 0 0 240px;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: #131922;
+    border: 1px solid #2d3748;
+    border-radius: 6px;
+    padding: 7px 12px 7px 32px;
+    color: #e2e8f0;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .search-box input:focus { border-color: #2563eb; }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #475569;
+    font-size: 13px;
+  }
+
+  select {
+    background: #131922;
+    border: 1px solid #2d3748;
+    border-radius: 6px;
+    padding: 7px 28px 7px 10px;
+    color: #e2e8f0;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  select:focus { border-color: #2563eb; }
+
+  .filter-label {
+    font-size: 12px;
+    color: #475569;
+    margin-left: 4px;
+  }
+
+  .filter-spacer { flex: 1; }
+
+  .record-count {
+    font-size: 12px;
+    color: #475569;
+    align-self: center;
+  }
+
+  /* Table */
+  .table-container {
+    padding: 0 32px 32px;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+  }
+
+  thead th {
+    background: #0d1117;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid #1e2730;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  thead th:hover { color: #94a3b8; }
+
+  thead th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  thead th.sort-asc .sort-arrow::after { content: '↑'; opacity: 1; }
+  thead th.sort-desc .sort-arrow::after { content: '↓'; opacity: 1; }
+  thead th .sort-arrow::after { content: '↕'; }
+
+  tbody tr {
+    border-bottom: 1px solid #131922;
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: #131922; }
+
+  tbody td {
+    padding: 13px 14px;
+    font-size: 13px;
+    color: #cbd5e1;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .cluster-name {
+    font-weight: 600;
+    color: #f0f6ff;
+  }
+
+  .cluster-id {
+    font-size: 11px;
+    color: #475569;
+    margin-top: 2px;
+  }
+
+  /* Source badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Source */
+  .source-sfc { background: #1e3a5f; color: #60a5fa; }
+  .source-sfc .badge-dot { background: #60a5fa; }
+  .source-3p { background: #2d1e4f; color: #a78bfa; }
+  .source-3p .badge-dot { background: #a78bfa; }
+
+  /* Stage */
+  .stage-available { background: #14532d; color: #4ade80; }
+  .stage-build { background: #1c2f45; color: #60a5fa; }
+  .stage-coming { background: #2d2214; color: #fbbf24; }
+  .stage-negotiation { background: #1e1e1e; color: #94a3b8; }
+  .stage-maintenance { background: #2d1a1a; color: #f87171; }
+  .stage-sunset { background: #1e1e1e; color: #64748b; }
+
+  /* Op Status */
+  .status-available { background: #14532d; color: #4ade80; }
+  .status-partial { background: #2d2214; color: #fbbf24; }
+  .status-utilized { background: #2d1a1a; color: #f87171; }
+  .status-offline { background: #1e1e1e; color: #64748b; }
+  .status-maintenance { background: #2d1e4f; color: #c084fc; }
+
+  /* Utilization bar */
+  .util-cell {
+    min-width: 120px;
+  }
+
+  .util-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .util-bar-bg {
+    flex: 1;
+    height: 5px;
+    background: #1e2730;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+
+  .util-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  .util-pct {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 32px;
+    text-align: right;
+  }
+
+  .gpu-chip {
+    background: #131922;
+    border: 1px solid #2d3748;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .capacity-val {
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+
+  .capacity-unit {
+    font-size: 11px;
+    color: #475569;
+    margin-left: 2px;
+  }
+
+  .eta-val { color: #94a3b8; }
+  .eta-soon { color: #fbbf24; font-weight: 500; }
+  .eta-past { color: #4ade80; font-weight: 500; }
+
+  .location-val { color: #94a3b8; }
+
+  /* Actions col */
+  .row-actions { opacity: 0; transition: opacity 0.15s; }
+  tbody tr:hover .row-actions { opacity: 1; }
+
+  .icon-btn {
+    background: #1e2730;
+    border: 1px solid #2d3748;
+    border-radius: 5px;
+    padding: 4px 8px;
+    color: #64748b;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .icon-btn:hover { background: #252f3d; color: #e2e8f0; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #475569;
+  }
+
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state h3 { color: #64748b; margin-bottom: 6px; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #0d1117;
+    border: 1px solid #2d3748;
+    border-radius: 12px;
+    width: 640px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #1e2730;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-header h2 { font-size: 16px; font-weight: 600; }
+
+  .modal-body { padding: 24px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  .form-label { font-size: 12px; color: #64748b; font-weight: 500; }
+
+  .form-input {
+    background: #131922;
+    border: 1px solid #2d3748;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #e2e8f0;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+  }
+
+  .form-input:focus { border-color: #2563eb; }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #1e2730;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .stats-bar { flex-wrap: wrap; }
+    .table-container { padding: 0 16px 24px; }
+    .filters { padding: 12px 16px; }
+    header { padding: 16px; }
+    .stats-bar { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <h1>⚡ SFC Supply Dashboard</h1>
+    <p>GPU cluster availability — GTM team view</p>
+  </div>
+  <div class="header-actions">
+    <span class="last-updated" id="lastUpdated"></span>
+    <button class="btn btn-secondary" onclick="exportExcel()">↓ Export XLSX</button>
+    <button class="btn btn-primary" onclick="openAddModal()">+ Add Cluster</button>
+  </div>
+</header>
+
+<div class="stats-bar" id="statsBar">
+  <!-- populated by JS -->
+</div>
+
+<div class="filters">
+  <div class="search-box">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="searchInput" placeholder="Search clusters, GPU, location…" oninput="applyFilters()">
+  </div>
+  <select id="filterSource" onchange="applyFilters()">
+    <option value="">All Sources</option>
+    <option value="SFC">SFC-Owned</option>
+    <option value="3rd Party">3rd Party</option>
+  </select>
+  <select id="filterStage" onchange="applyFilters()">
+    <option value="">All Stages</option>
+    <option value="Won">Won</option>
+    <option value="Contracting">Contracting</option>
+    <option value="For Signature">For Signature</option>
+    <option value="Post-Qual">Post-Qual</option>
+    <option value="Qualification">Qualification</option>
+    <option value="Lead">Lead</option>
+    <option value="Revisit">Revisit</option>
+    <option value="Closed Revisit">Closed Revisit</option>
+    <option value="Lost">Lost</option>
+  </select>
+  <select id="filterStatus" onchange="applyFilters()">
+    <option value="">All Op Statuses</option>
+    <option value="Available">Available (Won)</option>
+    <option value="In Negotiation">In Negotiation</option>
+    <option value="Offline">Offline / Pipeline</option>
+  </select>
+  <select id="filterGPU" onchange="applyFilters()">
+    <option value="">All GPU Types</option>
+  </select>
+  <div class="filter-spacer"></div>
+  <span class="record-count" id="recordCount"></span>
+</div>
+
+<div class="table-container">
+  <table id="clusterTable">
+    <thead>
+      <tr>
+        <th onclick="sortTable('name')">Cluster <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('source')">Source <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('location')">Location <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('stage')">Stage <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('eta')">ETA <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('gpuType')">GPU Type <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('capacity')">Capacity <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('opStatus')">Op. Status <span class="sort-arrow"></span></th>
+        <th onclick="sortTable('utilization')" class="util-cell">Utilization <span class="sort-arrow"></span></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="icon">🔍</div>
+    <h3>No clusters match your filters</h3>
+    <p>Try adjusting the search or filter options above.</p>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="clusterModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Cluster</h2>
+      <button class="icon-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Cluster Name *</label>
+          <input class="form-input" id="f_name" placeholder="e.g. Cluster Alpha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Source *</label>
+          <select class="form-input" id="f_source">
+            <option value="SFC">SFC-Owned</option>
+            <option value="3rd Party">3rd Party</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input class="form-input" id="f_location" placeholder="e.g. San Jose, CA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stage *</label>
+          <select class="form-input" id="f_stage">
+            <option value="Available">Available</option>
+            <option value="Under Build">Under Build</option>
+            <option value="Coming Soon">Coming Soon</option>
+            <option value="In Negotiation">In Negotiation</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Sunset">Sunset</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ETA</label>
+          <input class="form-input" id="f_eta" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">GPU Type</label>
+          <input class="form-input" id="f_gpuType" placeholder="e.g. H100, A100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Capacity (GPUs)</label>
+          <input class="form-input" id="f_capacity" type="number" placeholder="e.g. 512">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operational Status</label>
+          <select class="form-input" id="f_opStatus">
+            <option value="Available">Available</option>
+            <option value="Partially Available">Partially Available</option>
+            <option value="Fully Utilized">Fully Utilized</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Offline">Offline</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Utilization %</label>
+          <input class="form-input" id="f_utilization" type="number" min="0" max="100" placeholder="0–100">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Notes</label>
+          <input class="form-input" id="f_notes" placeholder="Optional notes for the GTM team">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCluster()">Save Cluster</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// @@CLUSTERS_DATA@@
+let nextId = clusters.length + 1;
+let sortKey = 'opStatus';
+let sortAsc = true;
+let editingId = null;
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+
+function utilColor(pct) {
+  if (pct >= 90) return '#f87171';
+  if (pct >= 60) return '#fbbf24';
+  return '#34d399';
+}
+
+function stageBadgeClass(stage) {
+  const map = {
+    'Won':            'stage-available',
+    'Contracting':    'stage-build',
+    'For Signature':  'stage-build',
+    'Post-Qual':      'stage-coming',
+    'Qualification':  'stage-coming',
+    'Lead':           'stage-negotiation',
+    'Revisit':        'stage-maintenance',
+    'Closed Revisit': 'stage-sunset',
+    'Lost':           'stage-sunset',
+    // legacy
+    'Available':      'stage-available',
+    'Under Build':    'stage-build',
+    'Coming Soon':    'stage-coming',
+    'In Negotiation': 'stage-negotiation',
+    'Maintenance':    'stage-maintenance',
+    'Sunset':         'stage-sunset',
+  };
+  return map[stage] || 'stage-negotiation';
+}
+
+function statusBadgeClass(status) {
+  const map = {
+    'Available':          'status-available',
+    'Partially Available':'status-partial',
+    'Fully Utilized':     'status-utilized',
+    'Offline':            'status-offline',
+    'Maintenance':        'status-maintenance',
+  };
+  return map[status] || 'status-offline';
+}
+
+function formatETA(eta) {
+  if (!eta) return '<span style="color:#2d3748">—</span>';
+  const d = new Date(eta);
+  const now = new Date();
+  const diff = (d - now) / (1000 * 60 * 60 * 24);
+  const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+  if (diff < 0) return `<span class="eta-past">${label}</span>`;
+  if (diff < 30) return `<span class="eta-soon">${label}</span>`;
+  return `<span class="eta-val">${label}</span>`;
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('recordCount').textContent = `${data.length} cluster${data.length !== 1 ? 's' : ''}`;
+
+  if (data.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = data.map(c => {
+    const util = c.utilization ?? 0;
+    const capFmt = c.capacity ? `<span class="capacity-val">${c.capacity.toLocaleString()}</span><span class="capacity-unit">GPUs</span>` : '—';
+    return `
+    <tr>
+      <td>
+        <div class="cluster-name">${c.link ? `<a href="${c.link}" target="_blank" style="color:inherit;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${c.name}</a>` : c.name}</div>
+        ${c.notes ? `<div class="cluster-id">${c.notes.substring(0,48)}${c.notes.length>48?'…':''}</div>` : ''}
+      </td>
+      <td>
+        <span class="badge ${c.source === 'SFC' ? 'source-sfc' : 'source-3p'}">
+          <span class="badge-dot"></span>${c.source}
+        </span>
+      </td>
+      <td><span class="location-val">${c.location || '—'}</span></td>
+      <td><span class="badge ${stageBadgeClass(c.stage)}">${c.stage}</span></td>
+      <td>${formatETA(c.eta)}</td>
+      <td><span class="gpu-chip">${c.gpuType || '—'}</span></td>
+      <td>${capFmt}</td>
+      <td><span class="badge ${statusBadgeClass(c.opStatus)}">${c.opStatus}</span></td>
+      <td class="util-cell">
+        <div class="util-bar-wrap">
+          <div class="util-bar-bg">
+            <div class="util-bar-fill" style="width:${util}%;background:${utilColor(util)}"></div>
+          </div>
+          <span class="util-pct" style="color:${utilColor(util)}">${util}%</span>
+        </div>
+      </td>
+      <td>
+        <div class="row-actions" style="display:flex;gap:6px;">
+          <button class="icon-btn" onclick="openEditModal(${c.id})" title="Edit">✎</button>
+          <button class="icon-btn" onclick="deleteCluster(${c.id})" title="Delete" style="color:#f87171">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderStats(data) {
+  const total = data.length;
+  const won = data.filter(c => c.stage === 'Won').length;
+  const contracting = data.filter(c => ['Contracting','For Signature'].includes(c.stage)).length;
+  const pipeline = data.filter(c => ['Post-Qual','Qualification','Lead'].includes(c.stage)).length;
+  const lost = data.filter(c => ['Lost','Closed Revisit'].includes(c.stage)).length;
+  const totalGPUs = data.reduce((s, c) => s + (c.capacity || 0), 0);
+  const sfcCount = data.filter(c => c.source === 'SFC').length;
+  const tpCount = data.filter(c => c.source === '3rd Party').length;
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card green">
+      <div class="stat-label">Won</div>
+      <div class="stat-value">${won}</div>
+      <div class="stat-sub">${contracting} in contracting</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">Pipeline</div>
+      <div class="stat-value">${pipeline}</div>
+      <div class="stat-sub">Post-Qual / Qual / Lead</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">GPU Capacity (tracked)</div>
+      <div class="stat-value">${totalGPUs.toLocaleString()}</div>
+      <div class="stat-sub">across ${total} clusters</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Source Mix</div>
+      <div class="stat-value">${sfcCount} / ${tpCount}</div>
+      <div class="stat-sub">SFC-owned / 3rd Party</div>
+    </div>
+  `;
+}
+
+// ── Filtering & Sorting ───────────────────────────────────────────────────────
+
+function getFilteredData() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const src = document.getElementById('filterSource').value;
+  const stage = document.getElementById('filterStage').value;
+  const status = document.getElementById('filterStatus').value;
+  const gpu = document.getElementById('filterGPU').value;
+
+  return clusters.filter(c => {
+    if (search && !`${c.name} ${c.gpuType} ${c.location} ${c.notes}`.toLowerCase().includes(search)) return false;
+    if (src && c.source !== src) return false;
+    if (stage && c.stage !== stage) return false;
+    if (status && c.opStatus !== status) return false;
+    if (gpu && c.gpuType !== gpu) return false;
+    return true;
+  });
+}
+
+function applyFilters() {
+  const data = getSortedData(getFilteredData());
+  renderTable(data);
+}
+
+function sortTable(key) {
+  if (sortKey === key) sortAsc = !sortAsc;
+  else { sortKey = key; sortAsc = true; }
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  const colIndex = ['name','source','location','stage','eta','gpuType','capacity','opStatus','utilization'];
+  const idx = colIndex.indexOf(key);
+  if (idx !== -1) {
+    const ths = document.querySelectorAll('thead th');
+    ths[idx].classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+  }
+  applyFilters();
+}
+
+function getSortedData(data) {
+  return [...data].sort((a, b) => {
+    let va = a[sortKey] ?? '';
+    let vb = b[sortKey] ?? '';
+    if (sortKey === 'eta') {
+      va = va ? new Date(va).getTime() : Infinity;
+      vb = vb ? new Date(vb).getTime() : Infinity;
+    }
+    if (typeof va === 'number') return sortAsc ? va - vb : vb - va;
+    return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
+}
+
+// ── GPU filter population ─────────────────────────────────────────────────────
+
+function populateGPUFilter() {
+  const gpus = [...new Set(clusters.map(c => c.gpuType).filter(Boolean))].sort();
+  const sel = document.getElementById('filterGPU');
+  gpus.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Add Cluster';
+  ['name','location','gpuType','notes'].forEach(f => document.getElementById('f_'+f).value = '');
+  document.getElementById('f_capacity').value = '';
+  document.getElementById('f_utilization').value = '';
+  document.getElementById('f_eta').value = '';
+  document.getElementById('f_source').value = 'SFC';
+  document.getElementById('f_stage').value = 'Available';
+  document.getElementById('f_opStatus').value = 'Available';
+  document.getElementById('clusterModal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const c = clusters.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Cluster';
+  document.getElementById('f_name').value = c.name;
+  document.getElementById('f_source').value = c.source;
+  document.getElementById('f_location').value = c.location || '';
+  document.getElementById('f_stage').value = c.stage;
+  document.getElementById('f_eta').value = c.eta || '';
+  document.getElementById('f_gpuType').value = c.gpuType || '';
+  document.getElementById('f_capacity').value = c.capacity || '';
+  document.getElementById('f_opStatus').value = c.opStatus;
+  document.getElementById('f_utilization').value = c.utilization ?? '';
+  document.getElementById('f_notes').value = c.notes || '';
+  document.getElementById('clusterModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('clusterModal').classList.remove('open');
+}
+
+function saveCluster() {
+  const name = document.getElementById('f_name').value.trim();
+  if (!name) { alert('Cluster name is required.'); return; }
+  const cluster = {
+    id: editingId || nextId++,
+    name,
+    source: document.getElementById('f_source').value,
+    location: document.getElementById('f_location').value.trim(),
+    stage: document.getElementById('f_stage').value,
+    eta: document.getElementById('f_eta').value || null,
+    gpuType: document.getElementById('f_gpuType').value.trim(),
+    capacity: parseInt(document.getElementById('f_capacity').value) || 0,
+    opStatus: document.getElementById('f_opStatus').value,
+    utilization: parseInt(document.getElementById('f_utilization').value) || 0,
+    notes: document.getElementById('f_notes').value.trim(),
+  };
+  if (editingId) {
+    const idx = clusters.findIndex(c => c.id === editingId);
+    clusters[idx] = cluster;
+  } else {
+    clusters.push(cluster);
+  }
+  closeModal();
+  refresh();
+}
+
+function deleteCluster(id) {
+  if (!confirm('Remove this cluster?')) return;
+  clusters = clusters.filter(c => c.id !== id);
+  refresh();
+}
+
+// ── Excel Export ──────────────────────────────────────────────────────────────
+
+function exportExcel() {
+  const data = getFilteredData();
+  const headers = ['Cluster','Source','Location','Stage','ETA','GPU Type','Capacity (GPUs)','Op. Status','Utilization %','Notes'];
+  const rows = data.map(c => [
+    c.name, c.source, c.location, c.stage,
+    c.eta || '', c.gpuType, c.capacity, c.opStatus, c.utilization, c.notes
+  ]);
+
+  // Build CSV (Excel-compatible)
+  const escape = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+  const csv = [headers, ...rows].map(r => r.map(escape).join(',')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sfc-clusters-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+function refresh() {
+  const data = getFilteredData();
+  renderStats(clusters); // stats always off full dataset
+  renderTable(getSortedData(data));
+}
+
+document.getElementById('lastUpdated').textContent = 'Updated Jun 19, 2026';
+
+populateGPUFilter();
+refresh();
+</script>
+</body>
+</html>
